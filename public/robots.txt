@@ -1,0 +1,6 @@
+# Sandstone Stucco Co — robots.txt
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://sandstonestucco.ca/sitemap-index.xml
