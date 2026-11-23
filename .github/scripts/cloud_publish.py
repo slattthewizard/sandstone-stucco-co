@@ -52,6 +52,7 @@ def make_nav_title(title):
     nav = re.sub(r'\s*\|.*$', '', title)
     nav = re.sub(r'\s*[-–—]\s*Sandstone Stucco Co.*$', '', nav)
     nav = re.sub(r'\s*\(20\d{2}.*?\)', '', nav)
+    nav = re.sub(r"\s+in Calgary\b", "", nav)
     nav = re.sub(r"\s*Calgary:?\s*", ' ', nav).strip()
     if len(nav) <= 30:
         return nav
@@ -156,6 +157,17 @@ def clean_body_links(body):
     return body
 
 
+def unlink_unpublished(body, blog_dir, slug):
+    """Drop links to /blog/<slug>/ posts that aren't live yet (queued siblings), keep the text."""
+    def repl(m):
+        target = m.group(2)
+        if target == slug or (blog_dir / f'{target}.md').exists():
+            return m.group(0)
+        print(f"  unlinked not-yet-published post: /blog/{target}/")
+        return m.group(1)
+    return re.sub(r'\[([^\]]+)\]\(/blog/([a-z0-9-]+)/?\)', repl, body)
+
+
 def convert_and_write(draft_path, output_path, publish_date, slug):
     with open(draft_path, 'r', encoding='utf-8') as f:
         content = f.read()
@@ -182,6 +194,7 @@ def convert_and_write(draft_path, output_path, publish_date, slug):
     tag = guess_tag(title, primary_keyword)
     subtitle = extract_subtitle(body)
     body = clean_body_links(body)
+    body = unlink_unpublished(body, Path(output_path).parent, slug)
     faq = extract_faq(body)
     canonical = f'https://sandstonestucco.ca/blog/{slug}/'
 
